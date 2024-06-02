@@ -1,0 +1,56 @@
+---
+- name: install tomcat on ubuntu
+  hosts: all 
+  become: yes
+  tasks:
+    - name : installation of jdk
+      ansible.builtin.apt: 
+        name: openjdk-11-jdk
+        update_cache: yes
+        state: present
+    - name: create a tom cat group 
+      ansible.builtin.group:
+        name: tomcat
+        sate: present
+    - name: crate a tomcat user 
+      ansible.builtin.user:
+        name: tomcat
+        state: present
+    - name: downloading tomcat zip file
+      ansible.builtin.unarchive: 
+        src: https://www-eu.apache.org/dist/tomcat/tomcat-10/v${VERSION}/bin/apache-tomcat-${VERSION}.tar.gz
+        remote_src: yes
+        owner: tomcat
+        group: tomcat
+        dest: /opt/tomcat
+    - name: crate a symbolic link
+      ansible.builtin.file:
+        src: opt/tomcat/apache-tomcat-${VERSION}
+        group: tomcat
+        path: /opt/tomcat/latest
+        state: link
+    - name: change permissions
+      ansible.builtin.file:
+        dest: /opt/tomcat
+        recurse: true
+        owner: tomcat
+        group: tomcat
+        state: directory
+    - name: excecute permission to shell file
+      ansible.builtin.command: sudo sh -c 'chmod +x /opt/tomcat/latest/bin/*.sh'
+    - name: creation of system file unit
+        ansible.builtin.copy: 
+        src: tomcat.service
+        dest: /etc/systemd/system/tomcat.service
+        owner: tomcat
+        group: tomcat
+    - name: system daemon-releoad and start tomcat.service
+      ansible.builtin.systemd_service:
+        daemon_reload: yes
+        name: tomcat.service
+        enabled: yes
+        state: started
+         
+         
+        
+              
